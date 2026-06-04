@@ -1,6 +1,6 @@
-from __unknown__ import p2n2creds
-import getpass
+from p2n2creds import p2n2cred
 import time
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -15,10 +15,21 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-import 
-
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+
+
+def get_next_saturday():
+    today = datetime.today().date()
+    # weekday() returns 0 for Monday, 5 for Saturday, 6 for Sunday
+    days_ahead = 5 - today.weekday()
+    
+    # If today is Saturday, days_ahead will be 0. 
+    # To target next week's Saturday instead of today, add 7 days.
+    if days_ahead <= 0: 
+        days_ahead += 7
+        
+    return today + timedelta(days=days_ahead)
 
 def export_to_google_sheet(data):
     creds = None
@@ -40,11 +51,14 @@ def export_to_google_sheet(data):
 
     try:
         service = build("sheets", "v4", credentials=creds)
+        sheet_titles = ["Food Bank Order", "Client List", "Food Table Layout"]
         spreadsheet_body = {
             'properties': {
-                'title': f'Agency Express Scraped Table - {time.strftime("%Y-%m-%d %H:%M:%S")}'
-            }
+                'title': f'P2N2 - {get_next_saturday().strftime("%B %Y")}'
+            },
+            'sheets': [{'properties': {'title': title}} for title in sheet_titles]
         }
+        # pyrefly: ignore [missing-attribute]
         request = service.spreadsheets().create(body=spreadsheet_body)
         response = request.execute()
         spreadsheet_id = response.get('spreadsheetId')
@@ -54,9 +68,10 @@ def export_to_google_sheet(data):
         body = {
             'values': data
         }
+        # pyrefly: ignore [missing-attribute]
         result = service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
-            range="Sheet1!A1",
+            range="'Food Bank Order'!A1",
             valueInputOption="RAW",
             body=body
         ).execute()
@@ -72,9 +87,9 @@ def run_scraper():
     #username = input("Username: ").strip()
     #password = getpass.getpass("Password: ").strip()
     
-    username = p2n2creds.username
-    program_code = p2n2creds.program_code
-    password = p2n2creds.password
+    username = p2n2cred["username"]
+    program_code = p2n2cred["program_code"]
+    password = p2n2cred["password"]
 
     # 2. Configure Selenium WebDriver options (Chrome)
     chrome_options = Options()

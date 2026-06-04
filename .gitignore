@@ -13,3 +13,5 @@ gcloud.txt
 p2n2creds.py
 
 output.txt
+credentials.json
+token.json
