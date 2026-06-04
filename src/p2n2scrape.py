@@ -1,5 +1,7 @@
+from asyncio import exceptions
 from p2n2creds import p2n2cred
 import time
+import re
 from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -30,6 +32,55 @@ def get_next_saturday():
         days_ahead += 7
         
     return today + timedelta(days=days_ahead)
+def food_categories_list():
+    return [
+        ["category_id", "label"],
+        [ 1,  "PROTEIN, FROZEN & REFRIGERATED ITEMS"],
+        [ 2,  "FRUIT"],
+        [ 3,  "VEGETABLES"],
+        [ 4,  "PASTAS, GRAINS AND CEREALS"],
+        [ 5,  "SAUCES/SNACKS"],
+        [ 6,  "BEVERAGES"]
+    ]
+
+def parse_food_bank_order(food_bank_data):
+    # Simplify the food bank order data to a smaller set
+    return_data = []
+    for row in food_bank_data:
+        if row[0][0] == "Description":
+            # Special header row for the simplified data to give context
+            return_data.append(["Item Name", "Qty", "Category", "Location"])
+            continue
+
+        # Avoid IndexError by using append or initializing the list
+        item_name = row[1]
+        qty = 0
+        if len(row) > 4:
+            if row[4] == "CS":
+                
+                # TWO slash case (rare)
+                match = re.search(r"(\d+)/(\d+)/", row[8])
+                if match:
+                    try:
+                        # Only use the number before the first slash 
+                        # Uncomment the last multiplicand to use the number before the second slash
+                        qty = int(row[2]) * int(match.group(1)) # * int(match.group(2))
+                    except ValueError:
+                        pass    
+                else:
+                    # ONE slash case (common)
+                    match = re.search(r"(\d+)\s*/", row[8])
+                    if match:
+                        if len(row) > 2:
+                            try:
+                                qty = int(row[2]) * int(match.group(1))
+                            except ValueError:
+                                pass
+                    else:
+                        print(f"no slash in string with CS product: {row[4]}")
+        
+        return_data.append([item_name, qty])
+    return return_data
 
 def export_to_google_sheet(data):
     creds = None
@@ -51,7 +102,7 @@ def export_to_google_sheet(data):
 
     try:
         service = build("sheets", "v4", credentials=creds)
-        sheet_titles = ["Food Bank Order", "Client List", "Food Table Layout"]
+        sheet_titles = ["Food Bank Order", "Simplified Food Bank Order", "Previous Inventory", "Client List", "Food Categories", "Food Table Layout", "Matrix"]
         spreadsheet_body = {
             'properties': {
                 'title': f'P2N2 - {get_next_saturday().strftime("%B %Y")}'
@@ -76,6 +127,30 @@ def export_to_google_sheet(data):
             body=body
         ).execute()
         print(f"{result.get('updatedCells')} cells updated successfully.")
+
+        # Update the simplified food bank order sheet
+        body = {
+            'values': parse_food_bank_order(data)
+        }
+        # pyrefly: ignore [missing-attribute]
+        result = service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id,
+            range="'Simplified Food Bank Order'!A1",
+            valueInputOption="RAW",
+            body=body
+        ).execute()
+        
+        # Update the food categories sheet
+        body = {
+            'values': food_categories_list()
+        }
+        # pyrefly: ignore [missing-attribute]
+        result = service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id,
+            range="'Food Categories'!A1",
+            valueInputOption="RAW",
+            body=body
+        ).execute()
         
     except HttpError as err:
         print(f"An error occurred with Google Sheets API: {err}")
@@ -93,8 +168,8 @@ def run_scraper():
 
     # 2. Configure Selenium WebDriver options (Chrome)
     chrome_options = Options()
-    # Uncomment the line below to run in headless mode (without opening a browser window)
-    # chrome_options.add_argument("--headless")
+    # Comment the line below to run in visible mode (with opening a browser window)
+    chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--window-size=1920,1080")
 
