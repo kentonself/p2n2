@@ -1,6 +1,7 @@
-function generateClientDoc() {
+ifunction generateClientDoc() {
 
   // Get the active Row
+
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   
   // Get the row number where the user's cursor is currently positioned
@@ -36,21 +37,28 @@ function generateClientDoc() {
 
    body.appendParagraph(formattedDate + "  HAMILTON PK UMC  Path 2 Nourishment 2 (P2N2)").setLineSpacing(1.5)
    body.appendParagraph("ORDER # _______").setLineSpacing(1.5)
-   body.appendParagraph("Family Name: " + rowData[0] ).setLineSpacing(1.5)
-   body.appendParagraph("Number in Family:  " + rowData[1]).setLineSpacing(1.5)
+   text = "Family Name:     " + rowData[0] + "\u2008\u2008\u2008\u2008"
+   p = body.appendParagraph(text )
+   p.setLineSpacing(1.5)
+   p.editAsText().setUnderline(0, text.length-1, true)
+   p.editAsText().setUnderline(0,13,false)
 
+   text = "Number in Family:    " + rowData[1] + "\u2008\u2008\u2008\u2008"
+   p = body.appendParagraph(text).setLineSpacing(1.5)
+   p.editAsText().setUnderline(0, text.length-1, true)
+   p.editAsText().setUnderline(0, 18, false)
    for(i=3;i<totalColumns;i++) {
      sectionHeadings(i, body)
-     qty = String(rowData[i]).padStart(4, ' ').padEnd(8, ' '); // qty will be 8 characters after
-     p = body.appendParagraph(qty + locations[i] + ".  " + itemNames[i])
+     qty = String(rowData[i]).padStart(8, ' ').padEnd(16, ' '); // qty will be 8 characters after
+     p = body.appendParagraph(qty + "    " + locations[i] + ".  " + itemNames[i]).setLineSpacing(2)
      p.editAsText().setUnderline(false)
-     p.editAsText().setUnderline(1,8,true)
+     p.editAsText().setUnderline(1,16,true)
    }
 
    body.appendParagraph("PRODUCE (circle one)           YES           NO")
    body.appendParagraph("")
    body.appendParagraph("VOLUNTEER INITIALS          ____________            __________")
-
+   body.appendParagraph("")
    body.appendParagraph("NEIGHBORS!")
    body.appendParagraph("OUR NEXT PATH 2 NOURISHMENT 2(P2N2) FOOD DISTRIBUTION WILL BE 2ND SATURDAY, JULY 11, 2026 FROM " +
                         "8:30 AM - 11:30 AM")
@@ -63,15 +71,15 @@ function generateClientDoc() {
 function sectionHeadings(line, body) {
   var p;
   switch (line) {
-    case 3:       body.appendParagraph(""); p = body.appendParagraph("Quantity FROZEN FOOD ITEMS"); break;
-    case 8:       body.appendParagraph(""); p = body.appendParagraph("Quantity REFRIGERATED FOOD ITEMS"); break;
-    case 10:      body.appendParagraph(""); p = body.appendParagraph("Quantity FRUITS"); break;
-    case 15:      body.appendParagraph(""); p = body.appendParagraph("Quantity VEGETABLES"); break;
-    case 23:      body.appendParagraph(""); p = body.appendParagraph("Quantity PASTAS. CEREALS, GRAINS"); break;
-    case 29:      body.appendParagraph(""); p = body.appendParagraph("Quantity SAUCES"); break;
-    case 32:      body.appendParagraph(""); p = body.appendParagraph("Quantity SNACKS"); break;
-    case 36:      body.appendParagraph(""); p = body.appendParagraph("Quantity BEVERAGES"); break;
-    case 38:      body.appendParagraph(""); p = body.appendParagraph("Quantity KITCHEN"); break;
+    case 3:  body.appendParagraph(""); p = body.appendParagraph("Quantity     FROZEN FOOD ITEMS"); break;
+    case 7:  body.appendParagraph(""); p = body.appendParagraph("Quantity     REFRIGERATED FOOD ITEMS"); break;
+    case 9:  body.appendParagraph(""); p = body.appendParagraph("Quantity     FRUITS"); break;
+    case 14: body.appendParagraph(""); p = body.appendParagraph("Quantity     VEGETABLES"); break;
+    case 22: body.appendParagraph(""); p = body.appendParagraph("Quantity     PASTAS. CEREALS, GRAINS"); break;
+    case 28: body.appendParagraph(""); p = body.appendParagraph("Quantity     SAUCES"); break;
+    case 31: body.appendParagraph(""); p = body.appendParagraph("Quantity     SNACKS"); break;
+    case 35: body.appendParagraph(""); p = body.appendParagraph("Quantity     BEVERAGES"); break;
+    case 37: body.appendParagraph(""); p = body.appendParagraph("Quantity     KITCHEN"); break;
     default: return
   }
   p.setLineSpacing(1.5)
