@@ -12,6 +12,7 @@ from selenium.webdriver.chrome.options import Options
 # Google API Imports
 import os.path
 from google.auth.transport.requests import Request
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -19,6 +20,7 @@ from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+TOKEN_JSON = "token.json"
 
 
 def get_next_saturday():
@@ -35,19 +37,22 @@ def get_next_saturday():
 def food_categories_list():
     return [
         ["category_id", "label"],
-        [ 1,  "PROTEIN, FROZEN & REFRIGERATED ITEMS"],
-        [ 2,  "FRUIT"],
-        [ 3,  "VEGETABLES"],
-        [ 4,  "PASTAS, GRAINS AND CEREALS"],
-        [ 5,  "SAUCES/SNACKS"],
-        [ 6,  "BEVERAGES"]
+        [ 1, "PROTEIN, FROZEN & REFRIGERATED ITEMS"],
+        [ 2, "FRUIT"],
+        [ 3, "VEGETABLES"],
+        [ 4, "PASTAS, GRAINS AND CEREALS"],
+        [ 5, "SAUCES"],
+        [ 6, "SNACKS"],
+        [ 7, "BEVERAGES"],
+        [ 8, "MISCELLANEOUS"],
+        [ 9, "KITCHEN - SEE POSTED AMOUNTS"]
     ]
 
 def parse_food_bank_order(food_bank_data):
     # Simplify the food bank order data to a smaller set
     return_data = []
     for row in food_bank_data:
-        if row[0][0] == "Description":
+        if row[0] == "Description":
             # Special header row for the simplified data to give context
             return_data.append(["Item Name", "Qty", "Category", "Location"])
             continue
@@ -84,19 +89,40 @@ def parse_food_bank_order(food_bank_data):
 
 def export_to_google_sheet(data):
     creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    if not creds or not creds.valid:
+    if os.path.exists(TOKEN_JSON):
+        creds = Credentials.from_authorized_user_file(TOKEN_JSON, SCOPES)
+    if not creds or not creds.valid or creds.expire:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                print("Access token expired. Attempting to refresh using refresh_token member...")
+                creds.refresh(Request())
+                print("Refresh successful!")
+            except RefreshError as e:
+                # TRAP: This is where 'invalid_grant' is caught before it crashes the app
+                print(f"\n[TRAPPED ERROR] Refresh token is invalid or revoked: {e}")
+                print("Deleting bad token file and forcing manual re-authentication...")
+                
+                if os.path.exists(TOKEN_JSON):
+                    os.remove(TOKEN_JSON)
+                
+                # Clear creds to force the flow below to run
+                creds = flow.run_local_server(port=0)
         else:
             if not os.path.exists("credentials.json"):
                 print("\n[Error] credentials.json not found in workspace!")
                 print("Please download your OAuth 2.0 Client credentials from the Google Cloud Console")
                 print("and save it as 'credentials.json' in the root directory.")
                 return
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-            creds = flow.run_local_server(port=0)
+            try:
+                flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            except Error as e:
+                print(f"TP1: Error at {linenum}: {e}")
+
+            try:
+                creds = flow.run_local_server(port=0)
+            except Error as e:
+                print(f"TP2: Error at {linenum}: {e}")
+
         with open("token.json", "w") as token:
             token.write(creds.to_json())
 
@@ -253,6 +279,7 @@ def run_scraper():
                 table_data.append(cols_text)
                 
             print(f"Successfully extracted {len(table_data)} rows.")
+            # print(f"Table data: {table_data}")
             
             # Export to Google Sheets
             export_to_google_sheet(table_data)
