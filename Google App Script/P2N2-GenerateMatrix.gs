@@ -4,6 +4,7 @@
  * "Previous Inventory", and "Client List" sheets.
  */
 function generateMatrix() {
+  var LogLevel = "DEBUG"
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
   // Get required sheets
@@ -33,6 +34,9 @@ function generateMatrix() {
   // Sort order rows by column D (Location) ascending.
   // We assume column D is index 3 (0-indexed). If index 3 doesn't exist, we fall back to sorting by index 0.
   orderRows.sort(function(a, b) {
+    if(LogLevel == "DEBUG") {
+          Logger.log("Sorting.");
+    }
     var valA = a.length > 3 ? parseFloat(a[3]) : 0;
     var valB = b.length > 3 ? parseFloat(b[3]) : 0;
     if (isNaN(valA)) valA = 0;
@@ -56,6 +60,10 @@ function generateMatrix() {
       continue;
     }
     
+    if(LogLevel == "DEBUG") {
+      Logger.log("Pusshing Qty and Location")
+    }
+
     var itemName = row[0]; // Column A (Item Name)
     var qty = row[1];      // Column B (Qty)
     itemNames.push(itemName);
@@ -90,6 +98,9 @@ function generateMatrix() {
     if (inventoryData.length > 1) {
       for (var j = 1; j < inventoryData.length; j++) {
         var invItemName = inventoryData[j][0];
+        if(LogLevel == "DEBUG") {
+            Logger.log("Item name: " + invItemName)
+        }
         var invQty = inventoryData[j][1];
         if (invItemName && orderItemMap.hasOwnProperty(invItemName)) {
           var colIdx = orderItemMap[invItemName];
