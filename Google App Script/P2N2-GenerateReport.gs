@@ -1,5 +1,6 @@
 function generateClientDoc() {
 
+
   // Get the active Row
 
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -17,6 +18,7 @@ function generateClientDoc() {
   
   // Get today's data for the report
   const today = new Date();
+  today.setDate(today.getDate() + 6 - today.getDay());  // Set to following Saturday
   const isoDate = today.toISOString().split('T')[0];
 
   const formattedDate = today.toLocaleDateString('en-US', {
@@ -49,10 +51,10 @@ function generateClientDoc() {
    p.editAsText().setUnderline(0, 18, false)
    for(i=3;i<totalColumns;i++) {
      sectionHeadings(i, body)
-     qty = String(rowData[i]).padStart(8, ' ').padEnd(16, ' '); // qty will be 8 characters after
+     qty = String(rowData[i]).padStart(11, ' ').padEnd(18, ' '); // qty will be 7 characters after
      p = body.appendParagraph(qty + "    " + locations[i] + ".  " + itemNames[i]).setLineSpacing(2)
      p.editAsText().setUnderline(false)
-     p.editAsText().setUnderline(1,16,true)
+     p.editAsText().setUnderline(1,18,true)
    }
 
    body.appendParagraph("PRODUCE (circle one)           YES           NO")
@@ -60,7 +62,7 @@ function generateClientDoc() {
    body.appendParagraph("VOLUNTEER INITIALS          ____________            __________")
    body.appendParagraph("")
    body.appendParagraph("NEIGHBORS!")
-   body.appendParagraph("OUR NEXT PATH 2 NOURISHMENT 2(P2N2) FOOD DISTRIBUTION WILL BE 2ND SATURDAY, JULY 11, 2026 FROM " +
+   body.appendParagraph("OUR NEXT PATH 2 NOURISHMENT 2(P2N2) FOOD DISTRIBUTION WILL BE 1ST SATURDAY, OCTOBER 3, 2026 FROM " +
                         "8:30 AM - 11:30 AM")
 
     body.appendParagraph("PLEASE CALL 214-870-3314 or 214-563-7504 IF YOU HAVE ANY QUESTIONS OR CONCERNS. PLEASE LET US " +
@@ -71,17 +73,18 @@ function generateClientDoc() {
 function sectionHeadings(line, body) {
   var p;
   switch (line) {
-    case 3:  body.appendParagraph(""); p = body.appendParagraph("Quantity     FROZEN FOOD ITEMS"); break;
-    case 7:  body.appendParagraph(""); p = body.appendParagraph("Quantity     REFRIGERATED FOOD ITEMS"); break;
-    case 9:  body.appendParagraph(""); p = body.appendParagraph("Quantity     FRUITS"); break;
-    case 14: body.appendParagraph(""); p = body.appendParagraph("Quantity     VEGETABLES"); break;
-    case 22: body.appendParagraph(""); p = body.appendParagraph("Quantity     PASTAS. CEREALS, GRAINS"); break;
-    case 28: body.appendParagraph(""); p = body.appendParagraph("Quantity     SAUCES"); break;
-    case 31: body.appendParagraph(""); p = body.appendParagraph("Quantity     SNACKS"); break;
-    case 35: body.appendParagraph(""); p = body.appendParagraph("Quantity     BEVERAGES"); break;
-    case 37: body.appendParagraph(""); p = body.appendParagraph("Quantity     KITCHEN"); break;
+    case 3:  body.appendParagraph(""); p = body.appendParagraph("Quantity     FROZEN, REFRIGERATED AND PROTEIN"); break;
+    //case 14: body.appendParagraph(""); p = body.appendParagraph("Quantity     FRUITS"); break;
+    case 19: body.appendParagraph(""); p = body.appendParagraph("Quantity     VEGETABLES"); break;
+    case 25: body.appendParagraph(""); p = body.appendParagraph("Quantity     PASTAS. CEREALS, GRAINS"); break;
+    case 32: body.appendParagraph(""); p = body.appendParagraph("Quantity     SAUCES"); break;
+    case 33: body.appendParagraph(""); p = body.appendParagraph("Quantity     SNACKS"); break;
+    case 39: body.appendParagraph(""); p = body.appendParagraph("Quantity     BEVERAGES"); break;
+    //case 37: body.appendParagraph(""); p = body.appendParagraph("Quantity     MISCELLANEOUS"); break;
+    case 46: body.appendParagraph(""); p = body.appendParagraph("Quantity     KITCHEN"); break;
     default: return
   }
   p.setLineSpacing(1.5)
   p.editAsText().setUnderline(true)
 }
+
