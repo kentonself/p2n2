@@ -1,4 +1,4 @@
-ifunction generateClientDoc() {
+function generateClientDoc() {
 
   // Get the active Row
 
