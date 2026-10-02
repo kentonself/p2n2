@@ -247,9 +247,18 @@ def run_scraper():
         # Print a small snippet to verify we reached the right page
         if "ctl00_contentPH_gvMain" in page_source:
             print("Confirmed: Order grid table ('ctl00_contentPH_gvMain') found on the page.")
-            #with open("output.txt", "w") as f:
-            #     print(page_source, file=f)
-            
+            print("Sleeping waiting for page to load")
+            time.sleep(3)
+            # Find all <tr> rows containing "Rejected" using XPath
+            odd_rejected_rows = driver.find_elements(By.XPATH, "//tr[contains(@class, 'odd') and contains(., 'Rejected')]")
+            even_rejected_rows = driver.find_elements(By.XPATH, "//tr[contains(@class, 'even') and contains(., 'Rejected')]")
+
+            # Pass each element to JavaScript to remove it from the DOM
+            for row in odd_rejected_rows:
+                driver.execute_script("arguments[0].remove();", row)
+            for row in even_rejected_rows:
+                driver.execute_script("arguments[0].remove();", row)
+
             # Find the first PrintPreview link within the table and click it
             print("\nLocating the first PrintPreview link in the grid...")
             print_link = wait.until(
