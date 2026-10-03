@@ -51,10 +51,19 @@ function generateClientDoc() {
    p.editAsText().setUnderline(0, 18, false)
    for(i=3;i<totalColumns;i++) {
      sectionHeadings(i, body)
-     qty = String(rowData[i]).padStart(11, ' ').padEnd(18, ' '); // qty will be 7 characters after
-     p = body.appendParagraph(qty + "    " + locations[i] + ".  " + itemNames[i]).setLineSpacing(2)
-     p.editAsText().setUnderline(false)
-     p.editAsText().setUnderline(1,18,true)
+
+     qty = String(rowData[i])
+     if(qty.includes('posted')) {
+           p = body.appendParagraph(qty + "    " + locations[i] + ".  " + itemNames[i]).setLineSpacing(2)
+           p.editAsText().setUnderline(false)
+           p.editAsText().setUnderline(1,10,true)
+
+     } else{ 
+           qty = qty.padStart(11, ' ').padEnd(18, ' '); // qty will be 7 characters after
+           p = body.appendParagraph(qty + "    " + locations[i] + ".  " + itemNames[i]).setLineSpacing(2)
+           p.editAsText().setUnderline(false)
+           p.editAsText().setUnderline(1,18,true)
+     }
    }
 
    body.appendParagraph("PRODUCE (circle one)           YES           NO")
